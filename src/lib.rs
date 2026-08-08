@@ -1,6 +1,6 @@
 //
 // Subscriber library
-// Copyright (c) 2024 Filip Szczerek <ga.software@yahoo.com>
+// Copyright (c) 2024-2026 Filip Szczerek <ga.software@yahoo.com>
 //
 // This project is licensed under the terms of the MIT license
 // (see the LICENSE file for details).
@@ -33,7 +33,10 @@ impl<T> SubscriberCollection<T> {
         self.subscribers.retain_mut(|subscriber| {
             match subscriber.upgrade() {
                 Some(subscriber) => {
-                    subscriber.borrow_mut().notify(value);
+                    // If already borrowed, most likely the notification is actually coming from this subscriber;
+                    // we skip self-notifications.
+                    if let Ok(mut sub) = subscriber.try_borrow_mut() { sub.notify(value); }
+
                     true
                 },
 
